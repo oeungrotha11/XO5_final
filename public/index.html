@@ -1,132 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <title>XO 5×5 Infinite</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<title>XO Game 3x3 & 5x5 Infinite</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
 
-  <div class="toggles">
+<div id="landing" class="screen center">
+  <h1>XO Game</h1>
+  <p>Choose board size & mode</p>
+
   <label>
-    <input type="checkbox" id="sound-toggle" checked>
-    🔊 Sound
+    Board Size:
+    <select id="board-size">
+      <option value="3">3 × 3</option>
+      <option value="5">5 × 5 Infinite</option>
+    </select>
   </label>
-</div>
 
-  
-  <div id="match-found" class="hidden">
-    <div class="pulse">Match Found!</div>
-  </div>
-
-
-  <!-- ===== LANDING ===== -->
-  <div id="landing" class="screen center">
-    <h1>XO 5×5</h1>
-    <p>Infinite Board</p>
-
-    <button onclick="startLocal2Player()">Local 2 Players</button>
-    <button onclick="startVsAI()">Play vs AI</button>
-    <button onclick="startLocalOnline()">Online Multiplayer</button>
-  </div>
-
-  <!-- ===== GAME ===== -->
-  <div id="game" class="screen hidden">
-    <div class="players-bar">
-  <div class="player x active">
-    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=X">
-    <span>X Player</span>
-  </div>
-
-  <div class="player o">
-    <img src="https://api.dicebear.com/7.x/bottts/svg?seed=O">
-    <span>O Player</span>
+  <div class="buttons">
+    <button id="btn-local">Local 2 Players</button>
+    <button id="btn-ai">Play vs AI</button>
+    <button id="btn-online">Online Multiplayer</button>
   </div>
 </div>
 
-    <!-- TOP BAR -->
-    <div class="top-bar">
-      <div class="toggles">
-        🔊 <input type="checkbox" checked />
-        📳 <input type="checkbox" checked />
-      </div>
-
-      <div class="players">
-        <div class="player x">
-          <div class="avatar">X</div>
-          <span>Player X</span>
-        </div>
-        <div class="player o">
-          <div class="avatar">O</div>
-          <span>Player O</span>
-        </div>
-      </div>
-
-      <div id="status">Waiting...</div>
-      <button id="rematch-btn">Rematch</button>
-    </div>
-
-    <!-- MAIN AREA -->
-    <div class="main">
-
-      <!-- BOARD -->
-      <div id="board-container">
-        <div class="zoom-controls">
-          <button>＋</button>
-          <button>－</button>
-        </div>
-
-        <div id="win-line"></div>
-        <div id="board"></div>
-      </div>
-
-
-      <!-- CHAT -->
-      <div class="chat">
-        <div id="chat-messages"></div>
-        <div class="chat-input">
-          <input id="chat-input" placeholder="Type message..." />
-          <button id="chat-send">Send</button>
-        </div>
-      </div>
-
+<div id="game" class="screen hidden">
+  <div class="top-bar">
+    <div id="status">Turn: X</div>
+    <div>
+      <button id="rematch-btn">Rematch (local)</button>
+      <button id="leave-online" class="hidden">Leave Room</button>
     </div>
   </div>
- <div class="spectators">👀 Spectators: 0</div>
 
+  <div class="main">
+    <div id="board-container">
+      <div class="zoom-controls">
+        <button id="zoom-in">＋</button>
+        <button id="zoom-out">－</button>
+      </div>
+      <div id="board"></div>
+    </div>
 
+    <div class="chat">
+      <div id="chat-messages"></div>
+      <div class="chat-input">
+        <input id="chat-input" placeholder="Type message..." />
+        <button id="chat-send">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <!-- Socket & Game -->
-  <script type="module">
-  import { startLocal } from './mode-local.js';
-  import { startAI } from './mode-ai.js';
-  import { startOnline } from './mode-online.js';
+<!-- Load socket.io UMD client that the server serves at /socket.io/socket.io.js -->
+  <script src="/socket.io/socket.io.js"></script>
 
-  window.startLocal2Player = () =>
-    startLocal(
-      document.getElementById('board'),
-      document.getElementById('status')
-    );
-
-  window.startVsAI = () =>
-    startAI(
-      document.getElementById('board'),
-      document.getElementById('status')
-    );
-
-  window.startLocalOnline = () =>
-    startOnline(
-      document.getElementById('board'),
-      document.getElementById('status'),
-      io(),
-      prompt('Room name:'),
-      null // server will assign
-    );
-</script>
-
+<!-- App (module) -->
+<script type="module" src="client.js"></script>
 </body>
-
 </html>

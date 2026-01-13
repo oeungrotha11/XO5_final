@@ -1,60 +1,79 @@
-import { renderBoard } from './game-core.js';
+// mode-ai.js
+import { board, expandBoard, renderBoard, checkWinner } from './game-core.js';
 
-export function startAI(boardEl, statusEl) {
-  document.getElementById('landing').style.display = 'none';
-  document.getElementById('game').classList.remove('hidden');
+export function startAI(boardEl, statusEl, size = 3) {
+  for (const k of Object.keys(board)) delete board[k];
 
-  let board = {};
   let currentTurn = 'X';
-  let minX = -10, maxX = 10, minY = -10, maxY = 10;
 
-  function expand(x,y){
-    minX = Math.min(minX, x);
-    maxX = Math.max(maxX, x);
-    minY = Math.min(minY, y);
-    maxY = Math.max(maxY, y);
-  }
+  function getPreview(x,y) { return board[`${x},${y}`] ? '' : currentTurn; }
 
-  function getPreview(x,y){
-    return currentTurn === 'X' && !board[`${x},${y}`] ? 'X' : '';
-  }
-
-  function onCellClick(x,y){
+  function onCellClick(x,y) {
     if (currentTurn !== 'X') return;
-    if (board[`${x},${y}`]) return;
+    const key = `${x},${y}`;
+    if (board[key]) return;
 
-    board[`${x},${y}`] = 'X';
-    expand(x,y);
+    board[key] = 'X';
+    if (size === 5) expandBoard(x,y);
+
+    const winner = checkWinner(board, size, size === 3 ? 3 : 5);
+    if (winner) {
+      statusEl.innerText = `${winner} wins!`;
+      if (size === 3) {
+        setTimeout(() => {
+          for (const k of Object.keys(board)) delete board[k];
+          currentTurn = 'X';
+          statusEl.innerText = `Your turn: X`;
+          renderBoard({ boardEl, size, getPreview, onCellClick });
+        }, 700);
+      }
+      return;
+    }
+
     currentTurn = 'O';
-    render();
+    statusEl.innerText = 'AI thinking...';
+    renderBoard({ boardEl, size, getPreview, onCellClick });
 
-    setTimeout(aiMove, 200);
+    setTimeout(() => {
+      aiMove();
+    }, 200);
   }
 
-  function aiMove(){
-    for (let y=minY; y<=maxY; y++) {
-      for (let x=minX; x<=maxX; x++) {
-        if (!board[`${x},${y}`]) {
-          board[`${x},${y}`] = 'O';
-          expand(x,y);
-          currentTurn = 'X';
-          render();
-          return;
+  function aiMove() {
+    // simple AI: first empty nearest to center / left-to-right
+    if (size === 3) {
+      for (let y = 0; y <= 2; y++) {
+        for (let x = 0; x <= 2; x++) {
+          const key = `${x},${y}`;
+          if (!board[key]) {
+            board[key] = 'O';
+            const winner = checkWinner(board, size, 3);
+            if (winner) statusEl.innerText = `${winner} wins!`;
+            currentTurn = 'X';
+            renderBoard({ boardEl, size, getPreview, onCellClick });
+            return;
+          }
+        }
+      }
+    } else {
+      // 5x5 infinite — search a bounding box around current min/max
+      for (let y = -8; y <= 8; y++) {
+        for (let x = -8; x <= 8; x++) {
+          const key = `${x},${y}`;
+          if (!board[key]) {
+            board[key] = 'O';
+            expandBoard(x,y);
+            const winner = checkWinner(board, size, 5);
+            if (winner) statusEl.innerText = `${winner} wins!`;
+            currentTurn = 'X';
+            renderBoard({ boardEl, size, getPreview, onCellClick });
+            return;
+          }
         }
       }
     }
   }
 
-  function render(){
-    renderBoard({
-      boardEl,
-      board,
-      minX,maxX,minY,maxY,
-      getPreview,
-      onCellClick
-    });
-  }
-
+  renderBoard({ boardEl, size, getPreview, onCellClick });
   statusEl.innerText = 'Your turn: X';
-  render();
 }
