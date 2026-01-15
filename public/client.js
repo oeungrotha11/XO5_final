@@ -4,6 +4,27 @@ import { startAI } from './mode-ai.js';
 import { startOnline } from './mode-online.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+
+function resetGameUI() {
+  // Clear board ONLY (not whole page)
+  boardEl.innerHTML = '';
+  statusEl.textContent = '';
+
+  // Leave online room safely
+  if (currentRoom) {
+    socket.emit('leaveRoom', { roomId: currentRoom });
+    currentRoom = null;
+  }
+
+  // Force UI state
+  showLanding();
+
+  // Hide leave button
+  leaveBtn.style.display = 'none';
+}
+
+
+
   // Elements
   const boardEl = document.getElementById('board');
   const statusEl = document.getElementById('status');
@@ -22,54 +43,71 @@ document.addEventListener('DOMContentLoaded', () => {
   // Show/hide helpers
   const landing = document.getElementById('landing');
   const gameScreen = document.getElementById('game');
-  function showGame() { landing.classList.add('hidden'); gameScreen.classList.remove('hidden'); }
-  function showLanding() { landing.classList.remove('hidden'); gameScreen.classList.add('hidden'); }
+ function showGame() {
+  landing.style.display = 'none';
+  gameScreen.style.display = 'block';
+  
+}
+
+function showLanding() {
+  gameScreen.style.display = 'none';
+  landing.style.display = 'block';
+}
+
+
+
+
 
   // Local mode
   btnLocal.addEventListener('click', () => {
-    const size = Number(sizeSelect.value);
-    showGame();
-    startLocal(boardEl, statusEl, size);
-    // if connected online previously, you can optionally disconnect here
-  });
+  const size = Number(sizeSelect.value);
+  currentRoom = null; // NOT online
+  showGame();
+  leaveBtn.style.display = 'inline-block';
 
-  // AI mode
-  btnAI.addEventListener('click', () => {
-    const size = Number(sizeSelect.value);
-    showGame();
-    startAI(boardEl, statusEl, size);
-  });
+  startLocal(boardEl, statusEl, size);
+});
+
+
+btnAI.addEventListener('click', () => {
+  const size = Number(sizeSelect.value);
+  currentRoom = null; // NOT online
+  showGame();
+  leaveBtn.style.display = 'inline-block';
+
+  startAI(boardEl, statusEl, size);
+});
+;
 
   // Online mode
   let currentRoom = null;
   btnOnline.addEventListener('click', () => {
-    const roomId = prompt('Enter room name (use same in other tab):');
-    if (!roomId) return;
-    const size = Number(sizeSelect.value);
-    currentRoom = roomId;
+  const roomId = prompt('Enter room name (use same in other tab):');
+  if (!roomId) return;
 
-    console.log('Joining room', roomId, 'size', size);
-    // start online mode (mode-online expects socket param)
-    showGame();
-    startOnline(boardEl, statusEl, socket, roomId, size);
+  const size = Number(sizeSelect.value);
+  currentRoom = roomId;
 
-    // Tell server we join with chosen size (server should use the payload)
-    socket.emit('joinOnlineRoom', { roomId, size });
+  console.log('Joining room', roomId, 'size', size);
 
-    // Show leave button
-    leaveBtn.classList.remove('hidden');
-  });
+  showGame();
+  leaveBtn.style.display = 'inline-block';
+
+
+  startOnline(boardEl, statusEl, socket, roomId, size);
+});
+
 
   // Leave online room
-  leaveBtn.addEventListener('click', () => {
-    if (currentRoom) {
-      socket.emit('leaveRoom', { roomId: currentRoom }); // server may not implement leave, but safe to emit
-      currentRoom = null;
-      leaveBtn.classList.add('hidden');
-      showLanding();
-      // optional: clear board or reset UI
-    }
-  });
+leaveBtn.addEventListener('click', () => {
+  if (currentRoom) {
+    socket.emit('leaveRoom', { roomId: currentRoom });
+    currentRoom = null;
+  }
+
+  resetGameUI();
+});
+
 
   // Rematch (local)
   rematchBtn.addEventListener('click', () => {
