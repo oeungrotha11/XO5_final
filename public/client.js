@@ -45,13 +45,13 @@ function resetGameUI() {
   const gameScreen = document.getElementById('game');
  function showGame() {
   landing.style.display = 'none';
-  gameScreen.style.display = 'block';
+  gameScreen.style.display = 'flex';
   
 }
 
 function showLanding() {
   gameScreen.style.display = 'none';
-  landing.style.display = 'block';
+  landing.style.display = 'flex';
 }
 
 
